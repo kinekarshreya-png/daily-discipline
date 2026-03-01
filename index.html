@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Daily Discipline Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #141E30, #243B55);
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 5px;
+    }
+
+    .date {
+      font-size: 14px;
+      margin-bottom: 15px;
+      opacity: 0.8;
+    }
+
+    .container {
+      background: white;
+      color: black;
+      max-width: 500px;
+      margin: auto;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    }
+
+    input {
+      width: 70%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 8px;
+      background: #243B55;
+      color: white;
+      cursor: pointer;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+    }
+
+    li {
+      background: #f1f1f1;
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .completed {
+      text-decoration: line-through;
+      color: gray;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🔥 Daily Discipline</h1>
+<div class="date" id="todayDate"></div>
+
+<div class="container">
+  <input type="text" id="taskInput" placeholder="Enter daily task">
+  <button onclick="addTask()">Add</button>
+
+  <ul id="taskList"></ul>
+</div>
+
+<script>
+  const today = new Date().toDateString();
+  document.getElementById("todayDate").innerText = "Date: " + today;
+
+  let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+  let savedDate = localStorage.getItem("savedDate");
+
+  // Reset tasks if new day
+  if (savedDate !== today) {
+    tasks.forEach(task => task.completed = false);
+    localStorage.setItem("savedDate", today);
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }
+
+  function addTask() {
+    const input = document.getElementById("taskInput");
+    if (input.value.trim() === "") return;
+
+    tasks.push({
+      text: input.value,
+      completed: false
+    });
+
+    input.value = "";
+    saveAndRender();
+  }
+
+  function toggleTask(index) {
+    tasks[index].completed = !tasks[index].completed;
+    saveAndRender();
+  }
+
+  function saveAndRender() {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+    renderTasks();
+  }
+
+  function renderTasks() {
+    const list = document.getElementById("taskList");
+    list.innerHTML = "";
+
+    tasks.forEach((task, index) => {
+      const li = document.createElement("li");
+
+      const span = document.createElement("span");
+      span.textContent = task.text;
+      if (task.completed) span.classList.add("completed");
+
+      span.onclick = () => toggleTask(index);
+
+      li.appendChild(span);
+      list.appendChild(li);
+    });
+  }
+
+  renderTasks();
+</script>
+
+</body>
+</html>
