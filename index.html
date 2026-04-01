@@ -34,19 +34,20 @@
     }
 
     input {
-      width: 70%;
+      width: 65%;
       padding: 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
     }
 
     button {
-      padding: 10px 15px;
+      padding: 10px 12px;
       border: none;
       border-radius: 8px;
       background: #243B55;
       color: white;
       cursor: pointer;
+      margin-left: 5px;
     }
 
     ul {
@@ -69,8 +70,37 @@
       text-decoration: line-through;
       color: gray;
     }
+
+    .task-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .delete-btn {
+      background: red;
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    #historyBox {
+      margin-top: 20px;
+      text-align: left;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .history-day {
+      background: #eee;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+    }
   </style>
 </head>
+
 <body>
 
 <h1>🔥 Daily Discipline</h1>
@@ -79,8 +109,11 @@
 <div class="container">
   <input type="text" id="taskInput" placeholder="Enter daily task">
   <button onclick="addTask()">Add</button>
+  <button onclick="toggleHistory()">History</button>
 
   <ul id="taskList"></ul>
+
+  <div id="historyBox" style="display:none;"></div>
 </div>
 
 <script>
@@ -90,9 +123,24 @@
   let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
   let savedDate = localStorage.getItem("savedDate");
 
-  // Reset tasks if new day
+  // SAVE HISTORY + RESET DAILY
   if (savedDate !== today) {
-    tasks.forEach(task => task.completed = false);
+    if (savedDate) {
+      let history = JSON.parse(localStorage.getItem("history")) || [];
+
+      history.push({
+        date: savedDate,
+        tasks: tasks
+      });
+
+      localStorage.setItem("history", JSON.stringify(history));
+    }
+
+    tasks = tasks.map(task => ({
+      text: task.text,
+      completed: false
+    }));
+
     localStorage.setItem("savedDate", today);
     localStorage.setItem("tasks", JSON.stringify(tasks));
   }
@@ -108,6 +156,98 @@
 
     input.value = "";
     saveAndRender();
+  }
+
+  function toggleTask(index) {
+    tasks[index].completed = !tasks[index].completed;
+    saveAndRender();
+  }
+
+  function deleteTask(index) {
+    tasks.splice(index, 1);
+    saveAndRender();
+  }
+
+  function saveAndRender() {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+    renderTasks();
+  }
+
+  function renderTasks() {
+    const list = document.getElementById("taskList");
+    list.innerHTML = "";
+
+    tasks.forEach((task, index) => {
+      const li = document.createElement("li");
+
+      const leftDiv = document.createElement("div");
+      leftDiv.className = "task-left";
+      leftDiv.onclick = () => toggleTask(index);
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = task.completed;
+      checkbox.onclick = (e) => {
+        e.stopPropagation();
+        toggleTask(index);
+      };
+
+      const span = document.createElement("span");
+      span.textContent = task.text;
+      if (task.completed) span.classList.add("completed");
+
+      leftDiv.appendChild(checkbox);
+      leftDiv.appendChild(span);
+
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "❌";
+      delBtn.className = "delete-btn";
+      delBtn.onclick = () => deleteTask(index);
+
+      li.appendChild(leftDiv);
+      li.appendChild(delBtn);
+
+      list.appendChild(li);
+    });
+  }
+
+  function toggleHistory() {
+    const box = document.getElementById("historyBox");
+
+    if (box.style.display === "none") {
+      showHistory();
+      box.style.display = "block";
+    } else {
+      box.style.display = "none";
+    }
+  }
+
+  function showHistory() {
+    const history = JSON.parse(localStorage.getItem("history")) || [];
+    const box = document.getElementById("historyBox");
+
+    box.innerHTML = "";
+
+    history.slice().reverse().forEach(day => {
+      const div = document.createElement("div");
+      div.className = "history-day";
+
+      let html = `<b>${day.date}</b><br>`;
+
+      day.tasks.forEach(task => {
+        html += `${task.completed ? "✅" : "❌"} ${task.text}<br>`;
+      });
+
+      div.innerHTML = html;
+      box.appendChild(div);
+    });
+  }
+
+  renderTasks();
+</script>
+
+</body>
+</html>    saveAndRender();
   }
 
   function toggleTask(index) {
